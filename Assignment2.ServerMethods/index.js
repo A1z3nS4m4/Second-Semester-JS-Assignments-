@@ -65,7 +65,7 @@ const addBook = function (req, res) {
     }
 
 
-// UPDATE A BOOK ==> PUT: /books
+
 const updateBook = function (req, res) {
     const body = [];
 
