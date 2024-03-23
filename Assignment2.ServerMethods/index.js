@@ -1,10 +1,10 @@
 const http = require('http');
-const fs = require('fs');
+const fs = require('fs')
 const path = require('path');
 
-const booksDbPath = path.join(__dirname, "db", 'books.json');
-let booksDB = [];
 
+let booksDB = [];
+const booksDbPath = path.join(__dirname, "db",'book.json')
 const PORT = 4000
 const HOST_NAME = 'localhost';
 
@@ -121,6 +121,6 @@ const deleteBook = function (req, res) {
 const server = http.createServer(requestHandler)
 
 server.listen(PORT, HOST_NAME, () => {
-    booksDB = JSON.parse(fs.readFileSync(booksDbPath, 'utf8'));
+    
     console.log(`Server is listening on ${HOST_NAME}:${PORT}`)
 })

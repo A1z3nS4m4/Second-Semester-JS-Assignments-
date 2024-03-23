@@ -1,67 +1,75 @@
-const http =require("http")
-const server = http.createServer(async (req,res)=> {
-    const body = await getBodyFromStream(req)
-req.body = body
- if (req.url === "/books") {
-    authenticate(req, res, getBooks);
-  }
-  if (req.url === "/authors") {
-    authenticate(req, res, getAuthors);
-  }const http = require("http");
-  const { findUser } = require("./db.function");
-  
-  function getBodyFromStream(req) {
-    return new Promise((resolve, reject) => {
-      const data = [];
-      req.on("data", (chunk) => {
-        data.push(chunk);
-      });
-      req.on("end", () => {
-        const body = Buffer.concat(data).toString();
-        if (body) {
-          // assuming that the body is a json object
-          resolve(JSON.parse(body));
-          return;
+const http = require('http');
+const fs = require('fs')
+const path = require('path');
+const authenticate = require("./authenticate")
+
+let booksDB = [];
+const booksDbPath = path.join(__dirname, "db",'book.json')
+const PORT = 3000
+const HOST_NAME = 'localhost';
+
+const requestHandler = function (req, res) {
+    res.setHeader("Content-Type", "application/json");
+
+    if (req.url === '/books' && req.method === 'GET'){
+    authenticate(req, res)
+            .then(()=> {
+                getAllBooks(req, res);
+            }).catch((err)=> {
+                res.writeHead(400)
+            })
+    } else if (req.url === '/books' && req.method === 'POST') {       
+        authenticate(req, res)
+        .then(()=> {
+            addBook(req, res);
+        }).catch((err)=> {
+            res.writeHead(400)
+        })
+    } else if (req.url === '/books' && req.method === 'PUT') {
+        authenticate(req, res)
+        .then(()=> {
+            updateBook(req, res);
+        }).catch((err)=> {
+            res.writeHead(400)
+            res.end(JSON.stringify({
+                message: 'No books to patch'
+            }))
+        })
+    } else if (req.url.startsWith('/books') && req.method === 'DELETE') {       
+        authenticate(req, res)
+        .then(()=> {
+            deleteBook(req, res);
+        }).catch((err)=> {
+            res.writeHead(400)
+            res.end(JSON.stringify({
+                message: 'No books to delete'
+            }))
+        })
+    } else {
+        res.writeHead(404);
+        res.end(JSON.stringify({
+            message: 'Method Not Supported'
+        }));
+    }
+
+}
+
+
+const getAllBooks = function (req, res) {
+    fs.readFile(booksDbPath, "utf8", (err, books)=> {
+        if (err){
+            console.log(err)
+            res.writeHead(400)
+            res.end("An error occured")
         }
-        resolve({});
-      });
-  
-      req.on("error", (err) => {
-        reject(err);
-      });
-    });
-  }
-  
-  function authenticate(req, res, next) {
-    const { username, password } = req.body;
-    console.log("authenticate", req.body);
-    const user = findUser(username);
-    if (!user) {
-      res.statusCode = 401;
-      res.end();
-      return;
-    }
-    if (user.username !== username || user.password !== password) {
-      res.statusCode = 401;
-      res.end();
-      return;
-    }
-    next(req, res);
-  }
-  
-  function getBooks(req, res) {
-    console.log("getBooks", req.body);
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({ books: [{ name: "Harry Potter" }] }));
-  }
-  
-  function getAuthors(req, res) {
-    console.log("getBooks", req.body);
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({ authors: [{ name: "J.K. Rowling" }] }))
-   
-  }
- function addBook (req, res) {
+
+        res.end(books);
+
+    })
+}
+
+
+const addBook = function (req, res) {
     const body = [];
 
     req.on('data', (chunk) => {
@@ -79,80 +87,66 @@ req.body = body
 
 
             res.end(JSON.stringify(newBook));
-        })};
- function deleteBook (req, res) {
-            const bookId = req.url.split('/')[2];
-            
-            
-            const bookIndex = booksDB.findIndex((book) => {
-                return book.id === parseInt(bookId);
-            })
+        });
+    }
+
+
+
+const updateBook = function (req, res) {
+    const body = [];
+
+    req.on('data', (chunk) => { 
+        body.push(chunk); 
+    });
+
+    req.on('end', () => {
+        const parsedBody = Buffer.concat(body).toString(); 
+        const bookToUpdate = JSON.parse(parsedBody); 
+
         
-            if (bookIndex === -1) {
-                res.writeHead(404);
-                res.end(JSON.stringify({
-                    message: 'Book not found'
-                }));
+        const bookIndex = booksDB.findIndex((book) => {
+            return book.id === bookToUpdate.id;
+        });
+
         
-                return;
-            }
-        
-            booksDB.splice(bookIndex, 1);        
+        if (bookIndex === -1) {
+            res.writeHead(404);
+            res.end(JSON.stringify({
+                message: 'Book not found'
+            }));
+            return;
         }
 
- function updateBook (req, res) {
-            const body = [];
         
-            req.on('data', (chunk) => { 
-                body.push(chunk); 
-            });
-        
-            req.on('end', () => {
-                const parsedBody = Buffer.concat(body).toString(); 
-                const bookToUpdate = JSON.parse(parsedBody); 
-        
-                
-                const bookIndex = booksDB.findIndex((book) => {
-                    return book.id === bookToUpdate.id;
-                });
-        
-                
-                if (bookIndex === -1) {
-                    res.writeHead(404);
-                    res.end(JSON.stringify({
-                        message: 'Book not found'
-                    }));
-                    return;
-                }
-        
-                
-            });
-        }        
-    
-  
-  const server = http.createServer(async (req, res) => {
-   
-   
-      const body = await getBodyFromStream(req);
-      req.body = body;
-      if (req.url === "/books") {
-        authenticate(req, res, getBooks);
-      }
-      if (req.url === "/authors") {
-        authenticate(req, res, getAuthors);}
-      if (req.url === '/addBook') {
-        authenticate(req, res, addBook)    
-      }
-      if (req.url === '/deleteBook') {
-        authenticate(req, res, deleteBook)    
-      }
-      if (req.url === '/updateBook') {
-        authenticate(req, res, updateBook)    
-      }
     });
-  
-  server.listen(3000, () => {
-    console.log("Server is listening on port 3000");
-  });
-  
+}
+
+
+
+const deleteBook = function (req, res) {
+    const bookId = req.url.split('/')[2];
+    
+    
+    const bookIndex = booksDB.findIndex((book) => {
+        return book.id === parseInt(bookId);
+    })
+
+    if (bookIndex === -1) {
+        res.writeHead(404);
+        res.end(JSON.stringify({
+            message: 'Book not found'
+        }));
+
+        return;
+    }
+
+    booksDB.splice(bookIndex, 1); 
+
+}
+
+const server = http.createServer(requestHandler)
+
+server.listen(PORT, HOST_NAME, () => {
+    
+    console.log(`Server is listening on ${HOST_NAME}:${PORT}`)
 })
