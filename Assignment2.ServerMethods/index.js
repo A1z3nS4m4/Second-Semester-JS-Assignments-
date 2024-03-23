@@ -23,6 +23,12 @@ const requestHandler = function (req, res) {
     } else if (req.url.startsWith('/books') && req.method === 'DELETE') {
         deleteBook(req, res);
         res.end('No books here')
+    } else if (req.url === '/books/authors' && req.method === 'GET') {
+        res.end('Authors database unavailable')
+    } else if (req.url === '/books/authors' && req.method === 'POST') {
+        res.end('Authors database unavailable')
+    } else if (req.url === '/books/authors' && req.method === 'PUT') {
+        res.end('Authors database unavailable')
     } else {
         res.writeHead(404);
         res.end(JSON.stringify({
