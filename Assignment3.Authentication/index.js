@@ -62,7 +62,7 @@ const requestHandler = function (req, res) {
         .then(()=> {
             getAllBooks(req, res);
         }).catch((err)=> {
-            res.writeHead(401)
+            res.writeHead(404)
             res.end(JSON.stringify({
                 message: 'No books to show you'
             }))
@@ -72,7 +72,7 @@ const requestHandler = function (req, res) {
         .then(()=> {
             addBook(req, res);
         }).catch((err)=> {
-            res.writeHead(401)
+            res.writeHead(404)
             res.end(JSON.stringify({
                 message: 'No books to post'
             }))
@@ -82,7 +82,7 @@ const requestHandler = function (req, res) {
         .then(()=> {
             updateBook(req, res);
         }).catch((err)=> {
-            res.writeHead(401)
+            res.writeHead(404)
             res.end(JSON.stringify({
                 message: 'No books to patch'
             }))
@@ -92,7 +92,7 @@ const requestHandler = function (req, res) {
         .then(()=> {
             deleteBook(req, res);
         }).catch((err)=> {
-            res.writeHead(401)
+            res.writeHead(404)
             res.end(JSON.stringify({
                 message: 'No books to delete'
             }))
@@ -102,7 +102,7 @@ const requestHandler = function (req, res) {
             .then(()=> {
                 addBook(req, res);
             }).catch((err)=> {
-                res.writeHead(401)
+                res.writeHead(404)
                 res.end(JSON.stringify({
                     message: 'Authors database unavailable'
                 }))
