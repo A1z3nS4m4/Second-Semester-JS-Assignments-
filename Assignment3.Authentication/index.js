@@ -1,50 +1,112 @@
 const http = require('http');
 const fs = require('fs')
 const path = require('path');
-const authenticate = require("./authenticate")
 
-let booksDB = [];
-const booksDbPath = path.join(__dirname, "db",'book.json')
-const PORT = 3000
+
+let userDB = [];
+const userDbPath = path.join(__dirname, "db",'users.json')
+const PORT = 6000
 const HOST_NAME = 'localhost';
+
+function authenticateUser(req, res) {
+    return new Promise((resolve, reject) => {
+        const body = [];
+  
+        req.on('data', (chunk) => {
+            body.push(chunk);
+        });
+  
+        req.on('end', async () => {
+            const parsedBody = Buffer.concat(body).toString();
+            if (!parsedBody) {
+                reject("Please enter your username and password");
+            }
+  
+            const loginDetails = JSON.parse(parsedBody);
+  
+            const users = await getAllUsers();
+            const userFound = users.find(user => user.username === loginDetails.username && user.password === loginDetails.password);
+  
+            if (!userFound) {
+                reject("Username or password incorrect");
+            }
+  
+            resolve(userFound)
+  
+        });
+        if (!user){
+            reject('User is undefined')
+        }
+      
+    })
+  }
+  
+  
+function getAllUsers() {
+    return new Promise((resolve, reject) => {
+        fs.readFile(userDbPath, "utf8", (err, users) => {
+            if (err){
+                reject(err)
+            }
+
+            resolve(JSON.parse(users))
+        })
+    })
+}
 
 const requestHandler = function (req, res) {
     res.setHeader("Content-Type", "application/json");
 
     if (req.url === '/books' && req.method === 'GET'){
-    authenticate(req, res)
-            .then(()=> {
-                getAllBooks(req, res);
-            }).catch((err)=> {
-                res.writeHead(400)
-            })
-    } else if (req.url === '/books' && req.method === 'POST') {       
-        authenticate(req, res)
+        authenticateUser(req, res)
+        .then(()=> {
+            getAllBooks(req, res);
+        }).catch((err)=> {
+            res.writeHead(401)
+            res.end(JSON.stringify({
+                message: 'No books to show you'
+            }))
+        })
+      } else if (req.url === '/books' && req.method === 'POST') {       
+        authenticateUser(req, res)
         .then(()=> {
             addBook(req, res);
         }).catch((err)=> {
-            res.writeHead(400)
+            res.writeHead(401)
+            res.end(JSON.stringify({
+                message: 'No books to post'
+            }))
         })
     } else if (req.url === '/books' && req.method === 'PUT') {
-        authenticate(req, res)
+        authenticateUser(req, res)
         .then(()=> {
             updateBook(req, res);
         }).catch((err)=> {
-            res.writeHead(400)
+            res.writeHead(401)
             res.end(JSON.stringify({
                 message: 'No books to patch'
             }))
         })
     } else if (req.url.startsWith('/books') && req.method === 'DELETE') {       
-        authenticate(req, res)
+        authenticateUser(req, res)
         .then(()=> {
             deleteBook(req, res);
         }).catch((err)=> {
-            res.writeHead(400)
+            res.writeHead(401)
             res.end(JSON.stringify({
                 message: 'No books to delete'
             }))
         })
+    }else if (req.url === '/books/authors' && req.method === 'GET') {       
+            authenticateUser(req, res)
+            .then(()=> {
+                addBook(req, res);
+            }).catch((err)=> {
+                res.writeHead(401)
+                res.end(JSON.stringify({
+                    message: 'Authors database unavailable'
+                }))
+            })    
     } else {
         res.writeHead(404);
         res.end(JSON.stringify({

@@ -1,18 +1,29 @@
-function authenticate(req, res, next) {
-  const { username, password } = req.body;
-  console.log("authenticate", req.body);
-  const user = findUser(username);
-  if (!user) {
-    res.statusCode = 401;
-    res.end();
-    return;
-  }
-  if (user.username !== username || user.password !== password) {
-    res.statusCode = 401;
-    res.end();
-    return;
-  }
-  next(req, res);
-} 
+function authenticateUser(req, res) {
+  return new Promise((resolve, reject) => {
+      const body = [];
 
-module.exports = { authenticate }
+      req.on('data', (chunk) => {
+          body.push(chunk);
+      });
+
+      req.on('end', async () => {
+          const parsedBody = Buffer.concat(body).toString();
+          if (!parsedBody) {
+              reject("Please enter your username and password");
+          }
+
+          const loginDetails = JSON.parse(parsedBody);
+
+          const users = await getAllUsers();
+          const userFound = users.find(user => user.username === loginDetails.username && user.password === loginDetails.password);
+
+          if (!userFound) {
+              reject("Username or password incorrect");
+          }
+
+          resolve(userFound)
+
+      });
+  })
+}
+

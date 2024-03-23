@@ -2,9 +2,9 @@ const http = require('http');
 const fs = require('fs')
 const path = require('path');
 
-
 let booksDB = [];
-const booksDbPath = path.join(__dirname, "db",'book.json')
+const booksDbPath = path.join(__dirname, "db", 'books.json');
+
 const PORT = 4000
 const HOST_NAME = 'localhost';
 
@@ -13,12 +13,16 @@ const requestHandler = function (req, res) {
 
     if (req.url === '/books' && req.method === 'GET') {
         getAllBooks(req, res);
+        res.end('No books here')
     } else if (req.url === '/books' && req.method === 'POST') {
         addBook(req, res);
+        res.end('No books here')
     } else if (req.url === '/books' && req.method === 'PUT') {
         updateBook(req, res);
+        res.end('No books here')
     } else if (req.url.startsWith('/books') && req.method === 'DELETE') {
         deleteBook(req, res);
+        res.end('No books here')
     } else {
         res.writeHead(404);
         res.end(JSON.stringify({
